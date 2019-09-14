@@ -1,0 +1,9 @@
+ext.versionSuffix = version.contains('SNAPSHOT') ? (
+        (
+                System.getenv('GIT_COMMIT') ? ('-git('
+                        + System.getenv('GIT_BRANCH')
+                        .substring(System.getenv('GIT_BRANCH').split('/')[0].length() + 1) + '-'
+                        + System.getenv('GIT_COMMIT').substring(0, 7) + ')') : ''
+        )
+                + (System.getenv('BUILD_NUMBER') ? '-jnks' + System.getenv('BUILD_NUMBER') : '')
+) : ''

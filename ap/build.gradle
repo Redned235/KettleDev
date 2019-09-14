@@ -1,0 +1,6 @@
+version = '1.0.0-SNAPSHOT'
+
+dependencies {
+    compile 'com.google.guava:guava:17.0'
+    compile 'org.apache.commons:commons-lang3:3.3.2'
+}

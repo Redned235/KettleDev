@@ -1,0 +1,6 @@
+apply plugin: 'groovy'
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:3.0.0-beta-2'
+    compile 'net.md-5:SpecialSource:1.8.5'
+}

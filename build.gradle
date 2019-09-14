@@ -1,0 +1,184 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url 'http://files.minecraftforge.net/maven' }
+        maven { url 'http://repo.minecrell.net/releases' }
+        maven { url "http://repo.spongepowered.org/maven" }
+        maven { url "https://repo.openprocesses.ml/repository/kettle-dev" }
+    }
+
+    dependencies {
+        classpath 'net.minecrell:VanillaGradle:2.0.3_1'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3+'
+        classpath "org.spongepowered:mixingradle:0.6-SNAPSHOT"
+    }
+}
+
+plugins {
+    id 'org.spongepowered.plugin' version '0.9.0'
+    id 'blue.lapis.methodremapper' version '0.2'
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id 'net.minecrell.vanillagradle.server' version '2.2-6'
+}
+
+apply plugin: "org.spongepowered.mixin"
+
+defaultTasks 'clean', 'build'
+apply from: 'gradle/deploy.gradle'
+
+sponge {
+    plugin {
+        id = 'kettle'
+    }
+}
+
+sourceSets.main.refMap = "mixins.kettle.refmap.json"
+minecraft {
+    version = '1.12.2'
+    mappings = 'stable_39'
+}
+
+allprojects {
+    group 'mc.kettle'
+    version '1.0.0-SNAPSHOT'
+    description = 'A Bukkit-Sponge Porting Layer'
+
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
+    }
+}
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+    maven { url 'http://nexus.hc.to/content/repositories/pub_releases' }
+    maven { url 'https://repo.openprocesses.ml/repository/kettle-dev/' }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
+}
+
+configurations {
+    shadow
+    compile {
+        extendsFrom shadow
+    }
+    shadowRuntime {
+        extendsFrom shadow
+    }
+    runtime {
+        extendsFrom shadowRuntime
+    }
+}
+
+dependencies {
+    compile project(':ap')
+
+    compile("org.spongepowered:mixin:0.7.12-SNAPSHOT") {
+        exclude module: 'launchwrapper'
+        exclude module: 'guava'
+    }
+
+    compile 'org.spongepowered:spongeapi:7.1.0'
+    compile 'org.spongepowered:spongevanilla:1.12.2-7.1.7-RC277'
+
+    shadow project('Kettlekit')
+
+    compile('net.milkbowl.vault:VaultAPI:1.7') {
+        transitive = false
+    }
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-library:1.3'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+    testRuntime 'org.slf4j:slf4j-simple:1.7.13'
+}
+
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += [
+            '-Xlint:all',
+            '-Xlint:-deprecation'
+    ]
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = 'full'
+        events 'skipped'
+    }
+}
+
+compileTestJava {
+    options.compilerArgs += '-proc:none'
+}
+
+remap {
+    inputTask = shadowJar
+}
+
+reobf {
+    jar {
+        mappingType = 'SEARGE'
+    }
+    shadowJar {}
+}
+
+jar {
+    manifest {
+        attributes(
+                'Specification-Title': 'Bukkit',
+                'Specification-Version': project('Kettlekit').version,
+                'Specification-Vendor': 'SpigotMC',
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version + versionSuffix,
+                'Implementation-Vendor': 'Kettle',
+                'Main-Class': 'mc.kettle.kettle.util.InfoMain',
+                "tweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+                "TweakOrder": 0,
+                "MixinConfigs": "mixins.kettle.core.json",
+                'FMLAT': 'kettle_at.cfg',
+                "ForceLoadAsMod": true
+        )
+    }
+}
+
+def mappings = "mappings/v1_12_R1" // reminder : keep updated
+shadowJar {
+    from { ["LICENSE", "LICENSE-AGPL", "LICENSE-MIT"] }
+    from { [mappings + "vcb2kettle.srg"] }
+    from(mappings + "kettle_at.cfg") {
+        into("META-INF/")
+    }
+    classifier = ''
+    exclude 'remap.txt'
+
+    configurations = [project.configurations.shadowRuntime]
+    dependencies {
+        exclude dependency('com.google.guava:guava')
+        exclude dependency('com.google.code.gson:gson')
+        exclude dependency('org.yaml:snakeyaml')
+    }
+}
+
+sourceJar {
+    from { ["LICENSE", "LICENSE-AGPL", "LICENSE-MIT"] }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.14'
+}

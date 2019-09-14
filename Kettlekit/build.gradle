@@ -1,0 +1,27 @@
+defaultTasks 'clean', 'build'
+
+version = '1.12.2-R0.1-SNAPSHOT'
+
+dependencies {
+    compile 'commons-lang:commons-lang:2.6'
+
+    compile('com.googlecode.json-simple:json-simple:1.1.1') {
+        exclude module: 'junit'
+    }
+
+    compile 'com.google.guava:guava:21.0'
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'org.avaje:ebean:2.8.1'
+    compile 'org.yaml:snakeyaml:1.19'
+    compile 'net.md-5:SpecialSource:1.8.5'
+    compile(project(":remapper")) {
+        exclude module: 'guava'
+    }
+
+    compile('net.md-5:bungeecord-chat:1.12-SNAPSHOT') {
+        transitive = false
+    }
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-library:1.3'
+}
